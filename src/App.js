@@ -294,6 +294,27 @@ const EditTransactionModal = ({ transaction, setEditingTransaction, userId }) =>
 };
 
 const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, deleteTransaction }) => {
+    
+    useEffect(() => {
+        if (!userId) return;
+
+        setLoading(true);
+        const q = query(collection(db, `users/${userId}/transactions`), orderBy('date', 'desc'));
+        const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
+            const transactionsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setTransactions(transactionsData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error de snapshot en Firestore:", error);
+            setLoading(false);
+        });
+
+        return () => unsubscribeFirestore();
+    }, [userId]);
+
     return (
         <>
             <Summary transactions={transactions} />
@@ -411,6 +432,8 @@ export default function App() {
     }
 
     useEffect(() => {
+        if(!app) return;
+
         const unsubscribeAuth = onAuthStateChanged(auth, user => {
             if (user) {
                 setUserId(user.uid);
@@ -421,37 +444,9 @@ export default function App() {
             }
         });
         return () => unsubscribeAuth();
-    }, []);
+    }, [app]);
 
-    useEffect(() => {
-        if (!userId) return;
-
-        setLoading(true);
-        const q = query(collection(db, `users/${userId}/transactions`), orderBy('date', 'desc'));
-        const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
-            const transactionsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setTransactions(transactionsData);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error de snapshot en Firestore:", error);
-            setLoading(false);
-        });
-
-        return () => unsubscribeFirestore();
-    }, [userId]);
-
-    const deleteTransaction = async (id) => {
-        if(window.confirm('¿Estás seguro de que quieres borrar esta transacción?')) {
-            try {
-                await deleteDoc(doc(db, `users/${userId}/transactions`, id));
-            } catch (error) {
-                console.error("Error al borrar el documento: ", error);
-            }
-        }
-    };
+    
 
     if (loading && userId) {
         return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="text-xl font-semibold">Cargando...</div></div>;
