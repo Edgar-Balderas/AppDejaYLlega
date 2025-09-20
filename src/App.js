@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { getAnalytics } from "firebase/analytics"; // Importa getAnalytics
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
@@ -23,12 +24,14 @@ const firebaseConfig = {
 let app;
 let auth;
 let db;
+let analytics; // Declara analytics con let
 
 // Inicializa Firebase solo si la configuración no son los valores de marcador de posición
 if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    analytics = getAnalytics(app); // Inicializa analytics dentro del if
 }
 
 
@@ -496,4 +499,3 @@ export default function App() {
         </div>
     );
 }
-
