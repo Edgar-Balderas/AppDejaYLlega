@@ -293,7 +293,7 @@ const EditTransactionModal = ({ transaction, setEditingTransaction, userId }) =>
     );
 };
 
-const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, deleteTransaction }) => {
+const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, deleteTransaction, setLoading, setTransactions }) => {
     
     useEffect(() => {
         if (!userId) return;
@@ -313,7 +313,7 @@ const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, delet
         });
 
         return () => unsubscribeFirestore();
-    }, [userId]);
+    }, [userId, setLoading, setTransactions]);
 
     return (
         <>
@@ -432,8 +432,6 @@ export default function App() {
     }
 
     useEffect(() => {
-        if(!app) return;
-
         const unsubscribeAuth = onAuthStateChanged(auth, user => {
             if (user) {
                 setUserId(user.uid);
@@ -444,7 +442,7 @@ export default function App() {
             }
         });
         return () => unsubscribeAuth();
-    }, [app]);
+    }, []);
 
     
 
@@ -478,6 +476,8 @@ export default function App() {
                             setPage={setPage}
                             setEditingTransaction={setEditingTransaction}
                             deleteTransaction={deleteTransaction}
+                            setLoading={setLoading}
+                            setTransactions={setTransactions}
                         />
                     ) : (
                         <ReportsPage transactions={transactions} setPage={setPage} />
