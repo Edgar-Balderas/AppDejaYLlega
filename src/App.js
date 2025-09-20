@@ -20,9 +20,6 @@ const firebaseConfig = {
 };
 
 // --- Initialize Firebase ---
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-//los renglones 26 al 28 ya venian antes de poner los 23 y 24, ver qué pasa
 let app;
 let auth;
 let db;
