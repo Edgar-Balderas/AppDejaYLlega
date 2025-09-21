@@ -156,30 +156,51 @@ const AddTransaction = ({ userId }) => {
     );
 };
 
-const TransactionList = ({ transactions, setEditingTransaction, deleteTransaction }) => (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Transacciones Recientes</h2>
-        <ul className="divide-y divide-gray-200">
-            {transactions.slice(0, 5).map((transaction) => (
-                <li key={transaction.id} className="py-4 flex justify-between items-center">
-                    <div>
-                        <p className="text-lg font-medium text-gray-900">{transaction.description}</p>
-                        <p className="text-sm text-gray-500">{transaction.category} - {new Date(transaction.date?.seconds * 1000).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
-                        <p className={`text-lg font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                            {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                        </p>
-                         <div className="flex space-x-2 mt-1">
-                            <button onClick={() => setEditingTransaction(transaction)} className="text-xs text-blue-500 hover:text-blue-700">Editar</button>
-                            <button onClick={() => deleteTransaction(transaction.id)} className="text-xs text-red-500 hover:red-blue-700">Borrar</button>
+const TransactionList = ({ transactions, setEditingTransaction }) => {
+    const [deleteTransactionId, setDeleteTransactionId] = useState(null);
+
+    const deleteTransaction = async (id) => {
+        if(window.confirm('¿Estás seguro de que quieres borrar esta transacción?')) {
+            try {
+                await deleteDoc(doc(db, `users/${userId}/transactions`, id));
+            } catch (error) {
+                console.error("Error al borrar el documento: ", error);
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (deleteTransactionId) {
+            deleteTransaction(deleteTransactionId);
+            setDeleteTransactionId(null);
+        }
+    }, [deleteTransactionId, deleteTransaction]);
+
+    return (
+        <div className="bg-white p-6 rounded-lg shadow-md mt-6">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Transacciones Recientes</h2>
+            <ul className="divide-y divide-gray-200">
+                {transactions.slice(0, 5).map((transaction) => (
+                    <li key={transaction.id} className="py-4 flex justify-between items-center">
+                        <div>
+                            <p className="text-lg font-medium text-gray-900">{transaction.description}</p>
+                            <p className="text-sm text-gray-500">{transaction.category} - {new Date(transaction.date?.seconds * 1000).toLocaleDateString()}</p>
                         </div>
-                    </div>
-                </li>
-            ))}
-        </ul>
-    </div>
-);
+                        <div className="text-right">
+                            <p className={`text-lg font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                                {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                            </p>
+                            <div className="flex space-x-2 mt-1">
+                                <button onClick={() => setEditingTransaction(transaction)} className="text-xs text-blue-500 hover:text-blue-700">Editar</button>
+                                <button onClick={() => setDeleteTransactionId(transaction.id)} className="text-xs text-red-500 hover:red-blue-700">Borrar</button>
+                            </div>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
 
 const Summary = ({ transactions }) => {
     const totalIncome = transactions
@@ -293,7 +314,7 @@ const EditTransactionModal = ({ transaction, setEditingTransaction, userId }) =>
     );
 };
 
-const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, deleteTransaction, setLoading, setTransactions }) => {
+const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, setLoading, setTransactions }) => {
     
     useEffect(() => {
         if (!userId) return;
@@ -323,7 +344,6 @@ const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, delet
                 <TransactionList 
                     transactions={transactions} 
                     setEditingTransaction={setEditingTransaction}
-                    deleteTransaction={deleteTransaction}
                 />
             </div>
         </>
@@ -449,6 +469,16 @@ export default function App() {
     if (loading && userId) {
         return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="text-xl font-semibold">Cargando...</div></div>;
     }
+
+    const deleteTransaction = async (id) => {
+        if(window.confirm('¿Estás seguro de que quieres borrar esta transacción?')) {
+            try {
+                await deleteDoc(doc(db, `users/${userId}/transactions`, id));
+            } catch (error) {
+                console.error("Error al borrar el documento: ", error);
+            }
+        }
+    };
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans">
