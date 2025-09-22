@@ -296,7 +296,8 @@ const EditTransactionModal = ({ transaction, setEditingTransaction, userId }) =>
 };
 
 const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, setLoading, setTransactions, deleteTransaction }) => {
-    
+    const [unsubscribe, setUnsubscribe] = useState(null);
+
     useEffect(() => {
         if (!userId) return;
 
@@ -314,8 +315,17 @@ const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, setLo
             setLoading(false);
         });
 
-        return () => unsubscribeFirestore();
-    }, [userId, setLoading, setTransactions]);
+        if (unsubscribe) {
+            unsubscribe();
+        }
+        setUnsubscribe(() => unsubscribeFirestore);
+
+        return () => {
+            if (unsubscribeFirestore) {
+                unsubscribeFirestore();
+            }
+        };
+    }, [userId, setLoading, setTransactions, unsubscribe]);
 
     return (
         <>
@@ -434,6 +444,16 @@ export default function App() {
         );
     }
 
+    const deleteTransaction = useCallback(async (id) => {
+        if(window.confirm('¿Estás seguro de que quieres borrar esta transacción?')) {
+            try {
+                await deleteDoc(doc(db, `users/${userId}/transactions`, id));
+            } catch (error) {
+                console.error("Error al borrar el documento: ", error);
+            }
+        }
+    }, [userId]);
+
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, user => {
             if (user) {
@@ -453,15 +473,7 @@ export default function App() {
         return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="text-xl font-semibold">Cargando...</div></div>;
     }
 
-    const deleteTransaction = async (id) => {
-        if(window.confirm('¿Estás seguro de que quieres borrar esta transacción?')) {
-            try {
-                await deleteDoc(doc(db, `users/${userId}/transactions`, id));
-            } catch (error) {
-                console.error("Error al borrar el documento: ", error);
-            }
-        }
-    };
+    
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans">
