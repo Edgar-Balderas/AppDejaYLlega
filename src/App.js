@@ -297,35 +297,42 @@ const EditTransactionModal = ({ transaction, setEditingTransaction, userId }) =>
 
 const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, setLoading, setTransactions, deleteTransaction }) => {
     const [unsubscribe, setUnsubscribe] = useState(null);
+    const [transactionsData, setTransactionsData] = useState([]);
+
+    const getTransactions = useCallback(() => {
+        if (userId) {
+            setLoading(true);
+            const q = query(collection(db, `users/${userId}/transactions`), orderBy('date', 'desc'));
+            const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
+                const transactionsData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setTransactionsData(transactionsData);
+                setLoading(false);
+            }, (error) => {
+                console.error("Error de snapshot en Firestore:", error);
+                setLoading(false);
+            });
+            setUnsubscribe(() => unsubscribeFirestore);
+        } else {
+            setTransactionsData([]);
+            setLoading(false);
+        }
+    }, [userId, setLoading, setTransactions]);
 
     useEffect(() => {
-        if (!userId) return;
-
-        setLoading(true);
-        const q = query(collection(db, `users/${userId}/transactions`), orderBy('date', 'desc'));
-        const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
-            const transactionsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setTransactions(transactionsData);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error de snapshot en Firestore:", error);
-            setLoading(false);
-        });
-
-        if (unsubscribe) {
-            unsubscribe();
-        }
-        setUnsubscribe(() => unsubscribeFirestore);
-
+        getTransactions();
         return () => {
-            if (unsubscribeFirestore) {
-                unsubscribeFirestore();
+            if (unsubscribe) {
+                unsubscribe();
             }
         };
-    }, [userId, setLoading, setTransactions, unsubscribe]);
+    }, [userId, getTransactions, unsubscribe]);
+
+    useEffect(() => {
+        setTransactions(transactionsData);
+    }, [transactionsData, setTransactions]);
 
     return (
         <>
