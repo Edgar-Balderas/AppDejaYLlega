@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -156,26 +156,7 @@ const AddTransaction = ({ userId }) => {
     );
 };
 
-const TransactionList = ({ transactions, setEditingTransaction }) => {
-    const [deleteTransactionId, setDeleteTransactionId] = useState(null);
-
-    const deleteTransaction = async (id) => {
-        if(window.confirm('¿Estás seguro de que quieres borrar esta transacción?')) {
-            try {
-                await deleteDoc(doc(db, `users/${userId}/transactions`, id));
-            } catch (error) {
-                console.error("Error al borrar el documento: ", error);
-            }
-        }
-    };
-
-    useEffect(() => {
-        if (deleteTransactionId) {
-            deleteTransaction(deleteTransactionId);
-            setDeleteTransactionId(null);
-        }
-    }, [deleteTransactionId, deleteTransaction]);
-
+const TransactionList = ({ transactions, setEditingTransaction, userId, deleteTransaction }) => {
     return (
         <div className="bg-white p-6 rounded-lg shadow-md mt-6">
             <h2 className="text-2xl font-bold mb-4 text-gray-800">Transacciones Recientes</h2>
@@ -192,7 +173,7 @@ const TransactionList = ({ transactions, setEditingTransaction }) => {
                             </p>
                             <div className="flex space-x-2 mt-1">
                                 <button onClick={() => setEditingTransaction(transaction)} className="text-xs text-blue-500 hover:text-blue-700">Editar</button>
-                                <button onClick={() => setDeleteTransactionId(transaction.id)} className="text-xs text-red-500 hover:red-blue-700">Borrar</button>
+                                <button onClick={() => deleteTransaction(transaction.id)} className="text-xs text-red-500 hover:red-blue-700">Borrar</button>
                             </div>
                         </div>
                     </li>
@@ -314,7 +295,7 @@ const EditTransactionModal = ({ transaction, setEditingTransaction, userId }) =>
     );
 };
 
-const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, setLoading, setTransactions }) => {
+const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, setLoading, setTransactions, deleteTransaction }) => {
     
     useEffect(() => {
         if (!userId) return;
@@ -344,6 +325,8 @@ const Dashboard = ({ transactions, userId, setPage, setEditingTransaction, setLo
                 <TransactionList 
                     transactions={transactions} 
                     setEditingTransaction={setEditingTransaction}
+                    userId={userId}
+                    deleteTransaction={deleteTransaction}
                 />
             </div>
         </>
