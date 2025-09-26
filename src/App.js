@@ -170,8 +170,8 @@ function LoginPage({ onLogin, error }) {
     };
     
     return (
-        <div className="flex flex-col items-center justify-center h-screen px-4">
-            <div className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
+        <div className="flex flex-col items-center justify-center h-screen px-4 ">
+            <div className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-lg border border-gray-200 items-center">
                 <div className="flex flex-col items-center mb-6">
                    <img src="/logo.png" alt="Deja y Llega Logo" className="w-24 h-24 mb-4"/>
                     <h1 className="text-2xl font-bold text-center text-[#4A2E2E]">Parkin Manager</h1>
